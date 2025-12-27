@@ -1,24 +1,20 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
-#include "hardware/i2c.h"
+
 #include "hardware/watchdog.h"
 #include "pico/cyw43_arch.h"
-#include "hardware/uart.h"
+
 #include "pico/multicore.h"
 #include "hardware/timer.h"
 #include "pico/time.h"
 #include <atomic>
 
 #include "core1_wifi.h"
+#include "i2c.h"
+#include "uart.h"
+#include "logging.h"
+#include "hdc302x.h"
 
-#define I2C_PORT i2c0
-#define I2C_SDA 8
-#define I2C_SCL 9
-
-#define UART_ID uart1
-#define BAUD_RATE 115200
-#define UART_TX_PIN 4
-#define UART_RX_PIN 5
 
 
 
@@ -57,15 +53,11 @@ int main()
     {
         printf("Failed to run timer for watchdog!\n"); return -2;
     }
-    watchdog_enable();
+    watchdog_enable(5000,true);
     sleep_ms(5000); //time for USB to connect
 
-    i2c_init(I2C_PORT, 400*1000);
-    gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
-    gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);
-    gpio_pull_up(I2C_SDA);
-    gpio_pull_up(I2C_SCL);
 
+    
     if (watchdog_caused_reboot()) {
         printf("Rebooted by Watchdog!\n");
 
@@ -82,11 +74,11 @@ int main()
     printf("Failed to run timer for uart!\n"); return -4;
     }   
 
+    init_i2c();
 
-    uart_init(UART_ID, BAUD_RATE);
-    gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
-    gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
-    uart_puts(UART_ID, " Hello, UART!\n");
+    init_uart();
+
+
 
     while (true) {
         if(flag_i2c==true)
