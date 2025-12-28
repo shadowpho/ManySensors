@@ -13,8 +13,9 @@
 #include "i2c.h"
 #include "uart.h"
 #include "logging.h"
-#include "hdc302x.h"
 
+#include "hdc302x.h"
+#include "PMS7003.h"
 
 
 
@@ -65,31 +66,33 @@ int main()
     //watchdog_enable(5000, 1);
 
     multicore_launch_core1(core1_main);
-    if(false==add_repeating_timer_ms(5000, time_for_i2c, NULL, &i2c_timer))
+    if(false==add_repeating_timer_ms(500, time_for_i2c, NULL, &i2c_timer))
     {
         printf("Failed to run timer for i2c!\n"); return -3;
     }    
-    if(false==add_repeating_timer_ms(10000, time_for_uart, NULL, &uart_timer))
+    sleep_ms(100); //offset timers
+    if(false==add_repeating_timer_ms(500, time_for_uart, NULL, &uart_timer))
     {
-    printf("Failed to run timer for uart!\n"); return -4;
+        printf("Failed to run timer for uart!\n"); return -4;
     }   
 
     init_i2c();
 
     init_uart();
+    setup_PMS7003();
 
-
-
+    uint16_t pm1,pm2p5,pm10;
     while (true) {
         if(flag_i2c==true)
         {
             flag_i2c = false;
-            printf("Serviced I2C\n");
+            //printf("Serviced I2C\n");
         }
         if(flag_uart==true)
         {
+            if(true == read_from_PMS(&pm1,&pm2p5,&pm10))
+                printf("Got data! %i, %i, %i\n", pm1, pm2p5, pm10);
             flag_uart = false;
-            printf("Serviced UART\n");
         }
 
         sleep_ms(1000);
