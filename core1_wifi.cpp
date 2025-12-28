@@ -11,9 +11,12 @@
 #include "pico/time.h"
 #include <atomic>
 
+#include "malloc.h"
+
 
 
 std::atomic<bool> flag_wifi = false;
+std::atomic<bool> flag_stats = false;
 
 bool time_for_wifi(struct repeating_timer *t)
 {
@@ -21,15 +24,26 @@ bool time_for_wifi(struct repeating_timer *t)
     return true;
 }
 
+bool time_for_stats(struct repeating_timer *t)
+{
+    flag_stats = true;
+    return true;
+}
 void core1_main()
 {
     struct repeating_timer wifi_timer;
+    struct repeating_timer malloc_stats_timer;
 
     if(false==add_repeating_timer_ms(100000, time_for_wifi, NULL, &wifi_timer))
     {
         printf("Failed to run timer for wifi!\n");
-
     }     
+
+    if(false==add_repeating_timer_ms(300000, time_for_stats, NULL, &malloc_stats_timer))
+    {
+        printf("Failed to run timer for debug!\n");
+
+    }   
 
     if (cyw43_arch_init()) {
         printf("Wi-Fi init failed\n");
@@ -53,6 +67,15 @@ void core1_main()
         {
             flag_wifi = false;
             printf("Serviced Wifi!\n");
+        }
+        if(flag_stats==true)
+        {
+            flag_stats = false;
+            struct mallinfo info = mallinfo();
+            printf("Total allocated: %d bytes\n", info.uordblks);
+            printf("Total free: %d bytes\n", info.fordblks);
+            printf("Total heap size: %d bytes\n", info.arena);
+            printf("Largest free block: %d bytes\n", info.ordblks);
         }
         sleep_ms(10000);
     }

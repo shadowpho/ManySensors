@@ -95,7 +95,7 @@ int main()
             flag_uart = false;
         }
 
-        sleep_ms(1000);
+        sleep_ms(100);
     }
     return 0;
 }
