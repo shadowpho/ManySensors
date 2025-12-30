@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(ManySensors ManySensors.cpp core1_wifi.cpp hdc302x.cpp i2c.cpp logging.cpp uart.cpp PMS7003.cpp hdc302x.cpp GoodTimer.cpp)
+add_executable(ManySensors ManySensors.cpp core1_wifi.cpp hdc302x.cpp i2c.cpp logging.cpp uart.cpp PMS7003.cpp hdc302x.cpp GoodTimer.cpp bmp280.cpp scd30.cpp veml7700.cpp)
 
 pico_set_program_name(ManySensors "ManySensors")
 pico_set_program_version(ManySensors "0.1")
