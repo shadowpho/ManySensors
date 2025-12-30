@@ -17,7 +17,7 @@ void init_i2c()
 bool write_to_device(uint8_t dev_address, const uint8_t *src, uint8_t len)
 {
     assert(len>0);
-    assert(dst!=NULL);
+    assert(src!=NULL);
     int i = i2c_write_timeout_us(I2C_PORT, dev_address, src,len,false,I2C_TIMEOUT);
     if(i!=1) return false;
 

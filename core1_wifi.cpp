@@ -59,6 +59,6 @@ void core1_main()
             printf("Total heap size: %d bytes\n", info.arena);
             printf("Largest free block: %d bytes\n", info.ordblks);
         }
-        __wfi();
+        sleep_ms(10);
     }
 }

@@ -57,7 +57,7 @@ int main()
                 printf("Got data! %i, %i, %i\n", pm1, pm2p5, pm10);
         }
 
-        __wfi();
+        sleep_ms(100);
     }
     return 0;
 }
