@@ -36,7 +36,7 @@ constexpr uint32_t timer_time_core0(TIMER_FLAGS_CORE0 f)
     case TIMER_FLAGS_CORE0::hdc_302x:
         return 1500;
     case TIMER_FLAGS_CORE0::scd30:
-        return 10000;
+        return 3000;
     case TIMER_FLAGS_CORE0::bmp280:
         return 1500;
     case TIMER_FLAGS_CORE0::veml7700:
