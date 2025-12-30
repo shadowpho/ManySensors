@@ -9,43 +9,43 @@
 
 #include <atomic>
 
-
-//32b every 200ms => 5x tx a second gives us 1s grace to handle it
+// 32b every 200ms => 5x tx a second gives us 1s grace to handle it
 #define RX_BUF_SIZE 160
-volatile uint8_t rx_buf[RX_BUF_SIZE];
-volatile std::atomic<uint16_t> rx_head = 0;
-volatile std::atomic<uint16_t> rx_tail = 0;
-volatile std::atomic<uint16_t> overflow_counter = 0;
+uint8_t rx_buf[RX_BUF_SIZE];
+std::atomic<uint16_t> rx_head = 0;
+std::atomic<uint16_t> rx_tail = 0;
+std::atomic<uint16_t> overflow_counter = 0;
 
-void on_uart_rx() 
+void on_uart_rx()
 {
-    while (uart_is_readable(UART_ID)) 
+    while (uart_is_readable(UART_ID))
     {
         uint8_t ch = uart_getc(UART_ID);
         uint16_t next_head = (rx_head + 1) % RX_BUF_SIZE;
-        
-        if (next_head != rx_tail) 
+
+        if (next_head != rx_tail)
         {
             rx_buf[rx_head] = ch;
             rx_head = next_head;
         }
         else
-            overflow_counter++;// Drop byte if buffer full
+            overflow_counter++; // Drop byte if buffer full
     }
 }
 
 // Check if data available
-bool uart_rx_available() 
+bool uart_rx_available()
 {
     return rx_head != rx_tail;
 }
 
 // Get one byte from ring buffer
-uint8_t uart_rx_get() 
+uint8_t uart_rx_get()
 {
     uint8_t ch = 0;
 
-    if (rx_head != rx_tail) {
+    if (rx_head != rx_tail)
+    {
         ch = rx_buf[rx_tail];
         rx_tail = (rx_tail + 1) % RX_BUF_SIZE;
     }

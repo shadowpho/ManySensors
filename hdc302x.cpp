@@ -1,4 +1,6 @@
 #include "hdc302x.h"
+#include "i2c.h"
+#include <stdio.h>
 
 enum HDC302x_Commands {
   SOFT_RESET = 0x30A2,
@@ -63,6 +65,48 @@ typedef enum {
 
 bool init_hdc302x()
 {
+  uint16_t manufacturerID;
 
+    if(read_from_2byte_register(HDC3022_ADDRESS, HDC302x_Commands::READ_MANUFACTURER_ID, (uint8_t*)&manufacturerID,2)==false) 
+    { 
+      printf("failed to read from HDC3022x\n"); return false;
+    }
+
+    if(manufacturerID != 0x3000) 
+    {
+      printf("hdc3022 mfg id wrong\n"); return false; 
+    }
+    manufacturerID= HDC302x_Commands::SOFT_RESET;
+    if(write_to_device(HDC3022_ADDRESS, (const uint8_t*)&manufacturerID,2)==false)
+    {
+      printf("hdc302x did not reset\n"); return false;
+    }
     return true;
+}
+
+
+bool start_auto_hdc302x()
+{
+  const uint16_t cmd = AUTO_MEASUREMENT_0_5MPS_LP0;
+  if(write_to_device(HDC3022_ADDRESS, (const uint8_t*)&cmd,2)==false)
+  {
+    printf("hdc302x did not start auto\n"); return false;
+  }
+  return true; 
+}
+
+bool get_data_hdc302x(float* temperature, float* rh)
+{
+  uint8_t buffer[6];
+  if(read_from_2byte_register(HDC3022_ADDRESS, HDC302x_Commands::MEASUREMENT_READOUT_AUTO_MODE, buffer,6))
+  {
+    printf("did not read data from HDC302x\n");
+    return false;
+  }
+  uint16_t rawTemperature = (buffer[0] << 8) | buffer[1];
+  uint16_t rawHumidity = (buffer[3] << 8) | buffer[4];
+
+  *temperature = ((rawTemperature / 65535.0) * 175.0) - 45.0;
+  *rh = (rawHumidity / 65535.0) * 100.0;
+  return true;
 }
