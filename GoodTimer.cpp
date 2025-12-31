@@ -33,12 +33,14 @@ void init_timers_core0()
     }
 }
 
+struct alarm_pool* core1_alarm_pool;
 void init_timers_core1()
 {
-    // XXXX MAKE THIS CORE1 ONLY
+    
+    core1_alarm_pool = alarm_pool_create_with_unused_hardware_alarm(16);
     for (int i = 0; i < (uint8_t)TIMER_FLAGS_CORE1::NUM_OF_ELEMENTS; i++)
     {
-        assert(true == add_repeating_timer_ms(timer_time_core1((TIMER_FLAGS_CORE1)i), timer_flag_callback_core1, (void *)(1 << i), &timer_core1[i]));
+        assert(true == alarm_pool_add_repeating_timer_ms(core1_alarm_pool, timer_time_core1((TIMER_FLAGS_CORE1)i), timer_flag_callback_core1, (void *)(1 << i), &timer_core1[i]));
         sleep_ms(100); // offset timers
     }
 }

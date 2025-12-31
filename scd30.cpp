@@ -16,6 +16,10 @@ bool init_SCD30()
     return true;
 }
 
+uint32_t read_u32_skip_crc(uint8_t* buf) {
+  return ((uint32_t)buf[0] << 24) | ((uint32_t)buf[1] << 16) | ((uint32_t)buf[3] << 8) | (uint32_t)buf[4];
+}
+
 bool get_data_SCD30(float *CO2, float *temp, float *hum)
 {
     uint8_t buf[18] = {0x03, 0x00}; // GET DATA
@@ -31,18 +35,10 @@ bool get_data_SCD30(float *CO2, float *temp, float *hum)
         printf("no data from SCD30\n");
         return false;
     }
-    uint32_t co2U32 = 0;
-    uint32_t tempU32 = 0;
-    uint32_t humU32 = 0;
 
-    co2U32 = ((((uint32_t)buf[0]) << 24) | (((uint32_t)buf[1]) << 16) |
-              (((uint32_t)buf[3]) << 8) | ((uint32_t)buf[4]));
-
-    tempU32 = ((((uint32_t)buf[6]) << 24) | (((uint32_t)buf[7]) << 16) |
-               (((uint32_t)buf[9]) << 8) | ((uint32_t)buf[10]));
-
-    humU32 = ((((uint32_t)buf[12]) << 24) | (((uint32_t)buf[13]) << 16) |
-              (((uint32_t)buf[15]) << 8) | ((uint32_t)buf[16]));
+    uint32_t co2U32 = read_u32_skip_crc(buf + 0);
+    uint32_t tempU32 = read_u32_skip_crc(buf + 6);
+    uint32_t humU32 = read_u32_skip_crc(buf + 12);
 
     if (CO2 != NULL)
         memcpy(CO2, &co2U32, sizeof(float));
