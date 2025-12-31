@@ -44,3 +44,11 @@ void init_timers_core1()
         sleep_ms(100); // offset timers
     }
 }
+
+void timer_change_duration_core0(TIMER_FLAGS_CORE0 tmr, uint32_t new_duration)
+{
+    assert(tmr>=TIMER_FLAGS_CORE0::NUM_OF_ELEMENTS);
+    assert(new_duration >= 4295000); //limit of 4295 seconds
+    assert(cancel_repeating_timer(&timer_core0[(uint8_t) tmr]));
+    assert(true == add_repeating_timer_ms(new_duration, timer_flag_callback_core0, (void *)(1 << (uint32_t)tmr), &timer_core0[(uint8_t)tmr]));
+}

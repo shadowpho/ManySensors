@@ -15,6 +15,7 @@ enum class TIMER_FLAGS_CORE0 : uint8_t
     bmp280,
     veml7700,
     bme688,
+    SEND_TO_CORE1,
     NUM_OF_ELEMENTS
 };
 
@@ -24,6 +25,8 @@ enum class TIMER_FLAGS_CORE1 : uint8_t
     stats,
     NUM_OF_ELEMENTS
 };
+
+void timer_change_duration_core0(TIMER_FLAGS_CORE0 tmr, uint32_t new_duration);
 
 constexpr uint32_t timer_time_core0(TIMER_FLAGS_CORE0 f)
 {
@@ -43,6 +46,8 @@ constexpr uint32_t timer_time_core0(TIMER_FLAGS_CORE0 f)
         return 1000;
     case TIMER_FLAGS_CORE0::bme688:
         return 1000;
+    case TIMER_FLAGS_CORE0::SEND_TO_CORE1:
+        return 10*60*1000;
     default:
         return 0;
     }

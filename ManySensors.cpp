@@ -20,6 +20,8 @@
 #include "bmp280.h"
 #include "scd30.h"
 
+#include "DataHandle.h"
+
 int main()
 {
     watchdog_disable();
@@ -92,6 +94,16 @@ int main()
         if (flags & (uint32_t)TIMER_FLAGS_CORE0::bme688)
         {
             printf("Serviced I2C\n");
+        }
+        if (flags & (uint32_t)TIMER_FLAGS_CORE0::SEND_TO_CORE1)
+        {
+            for (int i = 0; i < (uint8_t)SENSORS::NUM_OF_ELEMENTS; i++)
+            {
+                float d1, d2, d3, d4;
+                remove_CMA(&sensor_CMA_data[i], &d1, &d2, &d3, &d4);
+                printf("%s:%.1f,%.1f,%.1f,%.1f\n", SENSORS_STRING[i], d1, d2, d3, d4);
+                // XXX convert to JSON, sned to site
+            }
         }
         sleep_ms(100);
     }
