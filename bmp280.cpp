@@ -38,7 +38,7 @@ struct
   int16_t dig_p9;
 } compensation;
 
-bool setup_BMP280()
+bool init_BMP280()
 {
   uint8_t buff[2];
   READ_BMP280(BMP280_REGISTERS::BMP280_CHIP_ID, buff, 1);

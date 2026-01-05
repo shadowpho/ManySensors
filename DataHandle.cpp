@@ -1,6 +1,8 @@
 #include "DataHandle.h"
 
 
+CMA_Data sensor_CMA_data[(uint8_t)SENSORS::NUM_OF_ELEMENTS];
+
 void add_to_CMA(CMA_Data* struct_data, float val1, float val2, float val3, float val4)
 {
   struct_data->CMA_value1 += val1;

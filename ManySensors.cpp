@@ -48,7 +48,6 @@ int main()
 
     assert(start_auto_hdc302x() == true);
     assert(start_auto_BMP280() == true);
-    assert(start_auto_VEML7700() == true);
     uint16_t pm1, pm2p5, pm10;
 
     while (true)
@@ -89,7 +88,21 @@ int main()
         }
         if (flags & (uint32_t)TIMER_FLAGS_CORE0::veml7700)
         {
-            printf("Serviced I2C\n");
+            float light;
+            uint32_t ms_return;
+            int veml_state_ret = process_VEML7700(&light, &ms_return);
+            if(veml_state_ret==0)
+            {
+                printf("VEML data: %f,%i\n", light, ms_return);
+                assert(-1 == process_VEML7700(&light, &ms_return));
+            }
+            else if (veml_state_ret == -2)
+            {
+                printf("VEML error?\n");
+            }
+            //else veml_state==-1 and now veml_state==-1
+            timer_change_duration_core0(TIMER_FLAGS_CORE0::veml7700, ms_return);            
+            
         }
         if (flags & (uint32_t)TIMER_FLAGS_CORE0::bme688)
         {

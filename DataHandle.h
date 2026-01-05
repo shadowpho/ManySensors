@@ -18,7 +18,7 @@ enum class SENSORS{
     NUM_OF_ELEMENTS
 };
 
-static constexpr char* SENSORS_STRING[] = 
+static constexpr const char* SENSORS_STRING[] = 
 {
     "pms7003",
     "hdc_302x",
@@ -35,7 +35,9 @@ struct CMA_Data
   float CMA_value3 = 0; // moving average val3
   float CMA_value4 = 0; // moving average val3
   uint32_t num_of_samples = 0;
-} sensor_CMA_data[(uint8_t)SENSORS::NUM_OF_ELEMENTS];
+};
+
+extern CMA_Data sensor_CMA_data[(uint8_t)SENSORS::NUM_OF_ELEMENTS];
 
 void add_to_CMA(CMA_Data* struct_data, float val1, float val2, float val3, float val4);
 void remove_CMA(CMA_Data* struct_data, float* val1, float* val2, float* val3, float* val4);
