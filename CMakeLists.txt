@@ -35,7 +35,9 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(ManySensors ManySensors.cpp core1_wifi.cpp hdc302x.cpp i2c.cpp logging.cpp uart.cpp PMS7003.cpp hdc302x.cpp GoodTimer.cpp bmp280.cpp scd30.cpp veml7700.cpp DataHandle.cpp)
+file(GLOB SOURCE *.cpp BME68x/*.c)
+file(GLOB_RECURSE BSEC_SOURCE bsec/*.cpp)
+add_executable(ManySensors ${SOURCE} ${BSEC_SOURCE})
 
 pico_set_program_name(ManySensors "ManySensors")
 pico_set_program_version(ManySensors "0.1")
@@ -59,6 +61,7 @@ target_link_libraries(ManySensors
         hardware_watchdog
         pico_multicore
         pico_cyw43_arch_lwip_threadsafe_background
+        ${CMAKE_CURRENT_SOURCE_DIR}/bsec/bsec_iaq_sel_m33f_libalgobsec.a
         )
 
 pico_add_extra_outputs(ManySensors)

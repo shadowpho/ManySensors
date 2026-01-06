@@ -21,6 +21,7 @@
 #include "scd30.h"
 
 #include "DataHandle.h"
+#include "bsec/BSECglue.h"
 
 int main()
 {
@@ -42,6 +43,7 @@ int main()
     assert(init_BMP280() == true);
     assert(init_SCD30() == true);
     assert(init_VEML7700() == true);
+    BSEC_BME_init();
     init_uart();
     setup_PMS7003();
     sleep_ms(5); // wait for things to reset
@@ -91,7 +93,7 @@ int main()
             float light;
             uint32_t ms_return;
             int veml_state_ret = process_VEML7700(&light, &ms_return);
-            if(veml_state_ret==0)
+            if (veml_state_ret == 0)
             {
                 printf("VEML data: %f,%i\n", light, ms_return);
                 assert(-1 == process_VEML7700(&light, &ms_return));
@@ -100,13 +102,23 @@ int main()
             {
                 printf("VEML error?\n");
             }
-            //else veml_state==-1 and now veml_state==-1
-            timer_change_duration_core0(TIMER_FLAGS_CORE0::veml7700, ms_return);            
-            
+            // else veml_state==-1 and now veml_state==-1
+            timer_change_duration_core0(TIMER_FLAGS_CORE0::veml7700, ms_return);
         }
         if (flags & (uint32_t)TIMER_FLAGS_CORE0::bme688)
         {
-            printf("Serviced I2C\n");
+            float t4, p4, h4, VOC;
+            int ret = BSEC_BME_loop(&t4, &p4, &h4, &VOC);
+            if (ret != 0)
+            {
+                printf("BME/BSEC LOOP FAIL!!! %i\n", ret);
+            }
+            if (ret == 100)
+            {
+                BSEC_BME_init();
+            }
+            printf("...%f,%f,%f,%f",t4,p4,h4,VOC);
+            timer_change_duration_core0(TIMER_FLAGS_CORE0::bme688, BSEC_desired_sleep_us()/1000);
         }
         if (flags & (uint32_t)TIMER_FLAGS_CORE0::SEND_TO_CORE1)
         {
