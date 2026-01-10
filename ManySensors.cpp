@@ -30,7 +30,7 @@ int main()
     printf("Uart is a GO\n");
     init_timers_core0();
 
-    sleep_ms(5000); // time for USB to connect
+    sleep_ms(1000); // time for USB to connect
     printf("After Sleep\n");
 
     if (watchdog_caused_reboot())

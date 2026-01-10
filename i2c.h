@@ -6,7 +6,9 @@
 #define I2C_SDA 26
 #define I2C_SCL 27
 
-#define I2C_TIMEOUT 100
+//this in in uS, per byte!
+//we are at 100 khz, so 1 byte = ~0.2ms
+#define I2C_TIMEOUT 1000
 
 
 void init_i2c();

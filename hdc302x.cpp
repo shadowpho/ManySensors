@@ -2,6 +2,8 @@
 #include "i2c.h"
 #include <stdio.h>
 
+#include "lwip/def.h"
+
 enum HDC302x_Commands
 {
   SOFT_RESET = 0x30A2,
@@ -69,19 +71,19 @@ typedef enum
 bool init_hdc302x()
 {
   uint16_t manufacturerID;
-
-  if (read_from_2byte_register(HDC3022_ADDRESS, HDC302x_Commands::READ_MANUFACTURER_ID, (uint8_t *)&manufacturerID, 2) == false)
+/*
+  if (read_from_2byte_register(HDC3022_ADDRESS, htons(HDC302x_Commands::READ_MANUFACTURER_ID), (uint8_t *)&manufacturerID, 2) == false)
   {
     printf("failed to read from HDC3022x\n");
     return false;
   }
 
-  if (manufacturerID != 0x3000)
+  if (manufacturerID != ntohs(0x3000))
   {
     printf("hdc3022 mfg id wrong\n");
     return false;
-  }
-  manufacturerID = HDC302x_Commands::SOFT_RESET;
+  }*/
+  manufacturerID = htons(HDC302x_Commands::SOFT_RESET);
   if (write_to_device(HDC3022_ADDRESS, (const uint8_t *)&manufacturerID, 2) == false)
   {
     printf("hdc302x did not reset\n");
@@ -92,7 +94,7 @@ bool init_hdc302x()
 
 bool start_auto_hdc302x()
 {
-  const uint16_t cmd = AUTO_MEASUREMENT_0_5MPS_LP0;
+  const uint16_t cmd = htons(AUTO_MEASUREMENT_0_5MPS_LP0);
   if (write_to_device(HDC3022_ADDRESS, (const uint8_t *)&cmd, 2) == false)
   {
     printf("hdc302x did not start auto\n");
@@ -104,7 +106,7 @@ bool start_auto_hdc302x()
 bool get_data_hdc302x(float *temperature, float *rh)
 {
   uint8_t buffer[6];
-  if (read_from_2byte_register(HDC3022_ADDRESS, HDC302x_Commands::MEASUREMENT_READOUT_AUTO_MODE, buffer, 6))
+  if (read_from_2byte_register(HDC3022_ADDRESS, htons(HDC302x_Commands::MEASUREMENT_READOUT_AUTO_MODE), buffer, 6))
   {
     printf("did not read data from HDC302x\n");
     return false;
