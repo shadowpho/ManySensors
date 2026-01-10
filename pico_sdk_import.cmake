@@ -121,4 +121,3 @@ set(PICO_SDK_PATH ${PICO_SDK_PATH} CACHE PATH "Path to the Raspberry Pi Pico SDK
 include(${PICO_SDK_INIT_CMAKE_FILE})
 
 
-add_compile_options("-std=c++20")

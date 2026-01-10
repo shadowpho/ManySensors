@@ -26,10 +26,12 @@
 int main()
 {
     watchdog_disable();
-    stdio_init_all();
+    stdio_uart_init_full(uart1, 115200, 4, 5);
+    printf("Uart is a GO\n");
     init_timers_core0();
 
     sleep_ms(5000); // time for USB to connect
+    printf("After Sleep\n");
 
     if (watchdog_caused_reboot())
     {
@@ -51,7 +53,7 @@ int main()
     assert(start_auto_hdc302x() == true);
     assert(start_auto_BMP280() == true);
     uint16_t pm1, pm2p5, pm10;
-
+    printf("Entering main loop\n");
     while (true)
     {
         uint32_t flags = std::atomic_exchange(&timer_flags_core0, 0);
@@ -117,8 +119,8 @@ int main()
             {
                 BSEC_BME_init();
             }
-            printf("...%f,%f,%f,%f",t4,p4,h4,VOC);
-            timer_change_duration_core0(TIMER_FLAGS_CORE0::bme688, BSEC_desired_sleep_us()/1000);
+            printf("...%f,%f,%f,%f", t4, p4, h4, VOC);
+            timer_change_duration_core0(TIMER_FLAGS_CORE0::bme688, BSEC_desired_sleep_us() / 1000);
         }
         if (flags & (uint32_t)TIMER_FLAGS_CORE0::SEND_TO_CORE1)
         {

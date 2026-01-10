@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Initialise pico_sdk from installed location
@@ -40,15 +40,16 @@ file(GLOB_RECURSE BSEC_SOURCE bsec/*.cpp)
 add_executable(ManySensors ${SOURCE} ${BSEC_SOURCE})
 
 pico_set_program_name(ManySensors "ManySensors")
-pico_set_program_version(ManySensors "0.1")
+pico_set_program_version(ManySensors "0.2")
 
-# Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(ManySensors 0)
-pico_enable_stdio_usb(ManySensors 1)
 
-# Add the standard library to the build
-target_link_libraries(ManySensors
-        pico_stdlib)
+#pico_enable_stdio_usb(ManySensors 1)
+
+#THIS WILL BREAK NORMAL COMPILES AND FLASHES RIGHT NOW 
+#USE ONLY FOR ACTUAL OTA
+target_compile_definitions(ManySensors PRIVATE
+#    PICO_CRT0_IMAGE_TYPE_TBYB=1
+)
 
 # Add the standard include files to the build
 target_include_directories(ManySensors PRIVATE
@@ -61,8 +62,13 @@ target_link_libraries(ManySensors
         hardware_watchdog
         pico_multicore
         pico_cyw43_arch_lwip_threadsafe_background
-        ${CMAKE_CURRENT_SOURCE_DIR}/bsec/bsec_iaq_sel_m33f_libalgobsec.a
+        pico_stdlib
+        pico_sha256
+        boot_uf2_headers
+        ${CMAKE_CURRENT_SOURCE_DIR}/bsec/bsec_iaq_sel_m33_libalgobsec.a
         )
+
+pico_use_wifi_firmware_partition(ManySensors)
 
 pico_add_extra_outputs(ManySensors)
 

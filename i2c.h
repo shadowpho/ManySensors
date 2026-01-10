@@ -3,10 +3,10 @@
 #include "hardware/i2c.h"
 
 #define I2C_PORT i2c1
-#define I2C_SDA 18
-#define I2C_SCL 19
+#define I2C_SDA 26
+#define I2C_SCL 27
 
-#define I2C_TIMEOUT 5000
+#define I2C_TIMEOUT 100
 
 
 void init_i2c();
