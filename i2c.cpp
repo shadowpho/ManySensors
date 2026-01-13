@@ -55,13 +55,13 @@ bool read_from_2byte_register(uint8_t dev_address, uint16_t dev_register, uint8_
     int i = i2c_write_timeout_us(I2C_PORT, dev_address, (const uint8_t *)&dev_register, 2, true, I2C_TIMEOUT * 2);
     if (i != 2)
     {
-        printf("I2C Error:%i\n", i);
+        printf("I2C Register Error:%i\n", i);
         return false;
     }
     i = i2c_read_timeout_us(I2C_PORT, dev_address, dst, len, false, I2C_TIMEOUT * len);
     if (i != len)
     {
-        printf("I2C Error:%i\n", i);
+         printf("I2C ReadFromRegister Error:%i\n", i);
         return false;
     }
     return true;
@@ -73,13 +73,13 @@ bool read_from_1byte_register(uint8_t dev_address, uint8_t dev_register, uint8_t
     int i = i2c_write_timeout_us(I2C_PORT, dev_address, &dev_register, 1, true, I2C_TIMEOUT * 1);
     if (i != 1)
     {
-        printf("I2C Error:%i\n", i);
+        printf("I2C Register Error:%i\n", i);
         return false;
     }
     i = i2c_read_timeout_us(I2C_PORT, dev_address, dst, len, false, I2C_TIMEOUT * len);
     if (i != len)
     {
-        printf("I2C Error:%i\n", i);
+        printf("I2C ReadFromRegister Error:%i\n", i);
         return false;
     }
 

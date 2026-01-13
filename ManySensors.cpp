@@ -45,7 +45,7 @@ int main()
     assert(init_BMP280() == true);
     assert(init_SCD30() == true);
     assert(init_VEML7700() == true);
-    BSEC_BME_init();
+    //BSEC_BME_init(); XXX broken right now
     init_uart();
     setup_PMS7003();
     sleep_ms(5); // wait for things to reset
@@ -107,7 +107,7 @@ int main()
             // else veml_state==-1 and now veml_state==-1
             timer_change_duration_core0(TIMER_FLAGS_CORE0::veml7700, ms_return);
         }
-        if (flags & (uint32_t)TIMER_FLAGS_CORE0::bme688)
+        /*if (flags & (uint32_t)TIMER_FLAGS_CORE0::bme688)
         {
             float t4, p4, h4, VOC;
             int ret = BSEC_BME_loop(&t4, &p4, &h4, &VOC);
@@ -119,7 +119,7 @@ int main()
             {
                 BSEC_BME_init();
             }
-            printf("...%f,%f,%f,%f", t4, p4, h4, VOC);
+            printf("...%f,%f,%f,%f\n", t4, p4, h4, VOC);
             timer_change_duration_core0(TIMER_FLAGS_CORE0::bme688, BSEC_desired_sleep_us() / 1000);
         }
         if (flags & (uint32_t)TIMER_FLAGS_CORE0::SEND_TO_CORE1)
@@ -131,7 +131,7 @@ int main()
                 printf("%s:%.1f,%.1f,%.1f,%.1f\n", SENSORS_STRING[i], d1, d2, d3, d4);
                 // XXX convert to JSON, sned to site
             }
-        }
+        }*/
         sleep_ms(100);
     }
     return 0;

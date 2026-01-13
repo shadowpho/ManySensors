@@ -70,21 +70,30 @@ typedef enum
 
 bool init_hdc302x()
 {
-  uint16_t manufacturerID;
-/*
-  if (read_from_2byte_register(HDC3022_ADDRESS, htons(HDC302x_Commands::READ_MANUFACTURER_ID), (uint8_t *)&manufacturerID, 2) == false)
+  uint8_t buff[3];
+
+  if (read_from_2byte_register(HDC3022_ADDRESS, htons(HDC302x_Commands::READ_MANUFACTURER_ID), (uint8_t *)&buff, 3) == false)
   {
-    printf("failed to read from HDC3022x\n");
-    return false;
+    printf("failed to read from HDC3022x, attempting recovery\n");
+    int i = i2c_read_blocking(I2C_PORT, HDC3022_ADDRESS, buff, 3, false);
+    if (i < 0)
+    {
+      printf("Failed to re-read%i\n", i);
+      return false;
+    }
+    if (read_from_2byte_register(HDC3022_ADDRESS, htons(HDC302x_Commands::READ_MANUFACTURER_ID), (uint8_t *)&buff, 3) == false)
+      return false;
+    else
+      printf("Recovered HDC!!!!!!!!\n");
   }
 
-  if (manufacturerID != ntohs(0x3000))
+  if (!((buff[0] == 0x30) && (buff[1] == 0x00)))
   {
     printf("hdc3022 mfg id wrong\n");
     return false;
-  }*/
-  manufacturerID = htons(HDC302x_Commands::SOFT_RESET);
-  if (write_to_device(HDC3022_ADDRESS, (const uint8_t *)&manufacturerID, 2) == false)
+  }
+  uint16_t proper_command = htons(HDC302x_Commands::SOFT_RESET);
+  if (write_to_device(HDC3022_ADDRESS, (const uint8_t *)&proper_command, 2) == false)
   {
     printf("hdc302x did not reset\n");
     return false;

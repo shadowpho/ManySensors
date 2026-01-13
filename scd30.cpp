@@ -24,13 +24,14 @@ bool get_data_SCD30(float *CO2, float *temp, float *hum)
 {
     uint8_t buf[18] = {0x03, 0x00}; // GET DATA
     int i = i2c_write_timeout_us(I2C_PORT, SCD30_ADDRESS, buf, 2, false, 200 * 1000);
-    if (i != 5)
+    if (i != 2)
     {
         printf("failed to get data from SCD30\n");
         return false;
     }
     sleep_ms(5);
     i = i2c_read_timeout_us(I2C_PORT, SCD30_ADDRESS, buf, 18, false, 200 * 1000);
+    if(i!=18)
     {
         printf("no data from SCD30\n");
         return false;

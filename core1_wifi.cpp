@@ -26,7 +26,7 @@ void core1_main()
 
     cyw43_arch_enable_sta_mode();
 
-    check_accept_new_partition();
+    //check_accept_new_partition();
     printf("Connecting to Wi-Fi...\n");
     if (cyw43_arch_wifi_connect_timeout_ms(MYWIFI, MYWIFIPASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000))
     {

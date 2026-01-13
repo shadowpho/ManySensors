@@ -121,6 +121,7 @@ int BSEC_BME_init()
     memset(&bme68x[sens_no], 0, sizeof(bme68x[sens_no]));
 
     int ret_val = bme68x_init(&bme68x[sens_no]);
+    
     assert(ret_val == 0);
 
     bsecInstance[sens_no] = (uint8_t *)malloc(BSEC_INSTANCE_SIZE);

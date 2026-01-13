@@ -110,7 +110,7 @@ uint32_t VEML_Read_Single_Measurment(float *lux, int8_t gain, int8_t integration
 
 bool init_VEML7700()
 {
-    uint8_t buff[2];
+    uint8_t buff[2] = {0};
     READ_VEML7700(VEML_REGISTERS::VEML_ID, buff, 2);
     printf("Detected VEML7700: %i,%i\n", buff[0], buff[1]);
     buff[0] = 0x1; // ALS shut down
