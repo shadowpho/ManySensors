@@ -117,6 +117,7 @@ bool init_VEML7700()
         printf("did not detect VEML! %i,%i",buff[0],buff[1]);
         return false;
     }
+    buff[1] = 0;
     buff[0] = 0x1; // ALS shut down
     WRITE_VEML7700(VEML_REGISTERS::VEML_CONF_REGISTER, buff, 2);
     buff[0] = 0x0; // Power Savings disabled
