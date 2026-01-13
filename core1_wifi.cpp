@@ -15,6 +15,8 @@
 #include "GoodTimer.h"
 #include "ota.h"
 
+std::atomic_bool core1_watchdog = true;
+
 void core1_main()
 {
     init_timers_core1();
@@ -26,7 +28,7 @@ void core1_main()
 
     cyw43_arch_enable_sta_mode();
 
-    //check_accept_new_partition();
+    // check_accept_new_partition();
     printf("Connecting to Wi-Fi...\n");
     if (cyw43_arch_wifi_connect_timeout_ms(MYWIFI, MYWIFIPASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000))
     {
@@ -41,7 +43,12 @@ void core1_main()
 
     while (1)
     {
-         uint32_t flags = std::atomic_exchange(&timer_flags_core1, 0);
+        uint32_t flags = std::atomic_exchange(&timer_flags_core1, 0);
+        if (flags & (uint32_t)TIMER_FLAGS_CORE1::core1_watchdog)
+        {
+            core1_watchdog=true;
+        }
+
         if (flags & (uint32_t)TIMER_FLAGS_CORE1::wifi)
         {
             int tcp_status = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA);

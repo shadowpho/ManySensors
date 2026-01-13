@@ -23,12 +23,14 @@
 #include "DataHandle.h"
 #include "bsec/BSECglue.h"
 
+#include "pico/bootrom.h"
+
 int main()
 {
     watchdog_disable();
     stdio_uart_init_full(uart1, 115200, 4, 5);
     printf("Uart is a GO\n");
-    init_timers_core0();
+    
 
     sleep_ms(1000); // time for USB to connect
     printf("After Sleep\n");
@@ -53,12 +55,23 @@ int main()
     assert(start_auto_hdc302x() == true);
     assert(start_auto_BMP280() == true);
     uint16_t pm1, pm2p5, pm10;
+    init_timers_core0();
     printf("Entering main loop\n");
     while (true)
     {
         uint32_t flags = std::atomic_exchange(&timer_flags_core0, 0);
+
+        int uart_input_char;
+        do
+        {
+            uart_input_char = getchar_timeout_us(0);
+            if(uart_input_char == 'q')
+                rom_reset_usb_boot(0,0);
+        } while (uart_input_char!=PICO_ERROR_TIMEOUT);
+
         if (flags & (uint32_t)TIMER_FLAGS_CORE0::watchdog)
         {
+            core1_watchdog=false;
             watchdog_update();
         }
         if (flags & (uint32_t)TIMER_FLAGS_CORE0::pms7003)

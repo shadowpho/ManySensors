@@ -23,6 +23,7 @@ enum class TIMER_FLAGS_CORE1 : uint8_t
 {
     wifi,
     stats,
+    core1_watchdog,
     NUM_OF_ELEMENTS
 };
 
@@ -60,6 +61,8 @@ constexpr uint32_t timer_time_core1(TIMER_FLAGS_CORE1 f)
         return 100000;
     case TIMER_FLAGS_CORE1::stats:
         return 300000;
+    case TIMER_FLAGS_CORE1::core1_watchdog:
+        return 1000;
     default:
         return 0;
     }

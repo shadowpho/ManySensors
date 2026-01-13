@@ -112,7 +112,11 @@ bool init_VEML7700()
 {
     uint8_t buff[2] = {0};
     READ_VEML7700(VEML_REGISTERS::VEML_ID, buff, 2);
-    printf("Detected VEML7700: %i,%i\n", buff[0], buff[1]);
+    if(!((buff[0]==129)&&(buff[1]==196)))
+    {
+        printf("did not detect VEML! %i,%i",buff[0],buff[1]);
+        return false;
+    }
     buff[0] = 0x1; // ALS shut down
     WRITE_VEML7700(VEML_REGISTERS::VEML_CONF_REGISTER, buff, 2);
     buff[0] = 0x0; // Power Savings disabled
