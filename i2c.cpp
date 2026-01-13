@@ -33,7 +33,7 @@ bool write_to_register(uint8_t dev_address, uint8_t dev_register, const uint8_t 
 {
     assert(len > 0);
     assert(src != NULL);
-    int i = i2c_write_timeout_us(I2C_PORT, dev_address, &dev_address, 1, true, I2C_TIMEOUT * 1);
+    int i = i2c_write_timeout_us(I2C_PORT, dev_address, &dev_register, 1, true, I2C_TIMEOUT * 1);
     if (i != 1)
     {
         printf("I2C Error:%i\n", i);
