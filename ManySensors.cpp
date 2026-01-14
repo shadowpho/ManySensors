@@ -69,17 +69,17 @@ int main()
                 rom_reset_usb_boot(0,0);
         } while (uart_input_char!=PICO_ERROR_TIMEOUT);
 
-        if (flags & (uint32_t)TIMER_FLAGS_CORE0::watchdog)
+        if (is_flag_set(flags,TIMER_FLAGS_CORE0::watchdog))
         {
             core1_watchdog=false;
             watchdog_update();
         }
-        if (flags & (uint32_t)TIMER_FLAGS_CORE0::pms7003)
+        if (is_flag_set(flags,TIMER_FLAGS_CORE0::pms7003))
         {
             if (true == read_from_PMS(&pm1, &pm2p5, &pm10))
                 printf("Got data! %i, %i, %i\n", pm1, pm2p5, pm10);
         }
-        if (flags & (uint32_t)TIMER_FLAGS_CORE0::hdc_302x)
+        if (is_flag_set(flags,TIMER_FLAGS_CORE0::hdc_302x))
         {
             float temp, rh;
             if (true == get_data_hdc302x(&temp, &rh))
@@ -87,7 +87,7 @@ int main()
             else
                 printf("HDC302x error\n");
         }
-        if (flags & (uint32_t)TIMER_FLAGS_CORE0::scd30)
+        if (is_flag_set(flags,TIMER_FLAGS_CORE0::scd30))
         {
             float temp3, rh2, co2;
             if (true == get_data_SCD30(&co2, &temp3, &rh2))
@@ -95,7 +95,7 @@ int main()
             else
                 printf("SCD30 error\n");
         }
-        if (flags & (uint32_t)TIMER_FLAGS_CORE0::bmp280)
+        if (is_flag_set(flags,TIMER_FLAGS_CORE0::bmp280))
         {
             float temp2, press;
             if (true == get_data_BMP280(&temp2, &press))
@@ -103,7 +103,7 @@ int main()
             else
                 printf("BMP280 error\n");
         }
-        if (flags & (uint32_t)TIMER_FLAGS_CORE0::veml7700)
+        if (is_flag_set(flags,TIMER_FLAGS_CORE0::veml7700))
         {
             float light;
             uint32_t ms_return;

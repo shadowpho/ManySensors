@@ -123,7 +123,6 @@ bool init_VEML7700()
     buff[0] = 0x0; // Power Savings disabled
     sleep_ms(3);
     WRITE_VEML7700(VEML_REGISTERS::VEML_PS, buff, 2);
-    VEML_Start_Single_Measurment(1, 0);
     return true;
 }
 

@@ -6,6 +6,8 @@
 extern std::atomic<uint32_t> timer_flags_core0;
 extern std::atomic<uint32_t> timer_flags_core1;
 
+#define is_flag_set(flag_variable, flag) ((flag_variable & (1<<(uint32_t)flag))==(1<<(uint32_t)flag))
+
 enum class TIMER_FLAGS_CORE0 : uint8_t
 {
     watchdog, // 0
@@ -38,7 +40,7 @@ constexpr uint32_t timer_time_core0(TIMER_FLAGS_CORE0 f)
     case TIMER_FLAGS_CORE0::pms7003:
         return 200;
     case TIMER_FLAGS_CORE0::hdc_302x:
-        return 1500;
+        return 2200;
     case TIMER_FLAGS_CORE0::scd30:
         return 3000;
     case TIMER_FLAGS_CORE0::bmp280:

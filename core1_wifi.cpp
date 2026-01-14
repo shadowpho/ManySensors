@@ -44,12 +44,11 @@ void core1_main()
     while (1)
     {
         uint32_t flags = std::atomic_exchange(&timer_flags_core1, 0);
-        if (flags & (uint32_t)TIMER_FLAGS_CORE1::core1_watchdog)
+        if (is_flag_set(flags,TIMER_FLAGS_CORE1::core1_watchdog))
         {
             core1_watchdog=true;
         }
-
-        if (flags & (uint32_t)TIMER_FLAGS_CORE1::wifi)
+        if (is_flag_set(flags,TIMER_FLAGS_CORE1::wifi))
         {
             int tcp_status = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA);
             int32_t rssi = 0;
@@ -60,7 +59,7 @@ void core1_main()
             printf("WifiStats: Wifi:%i,TCP:%i,RSSI:%i,BSSID:%02X:%02X:%02X:%02X:%02X:%02X\n", wifi_status, tcp_status, rssi, bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
             cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, tcp_status == CYW43_LINK_UP);
         }
-        if (flags & (uint32_t)TIMER_FLAGS_CORE1::stats)
+        if (is_flag_set(flags,TIMER_FLAGS_CORE1::stats))
         {
             struct mallinfo info = mallinfo();
             printf("Total allocated: %d bytes\n", info.uordblks);

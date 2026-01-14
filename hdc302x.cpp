@@ -115,7 +115,7 @@ bool start_auto_hdc302x()
 bool get_data_hdc302x(float *temperature, float *rh)
 {
   uint8_t buffer[6];
-  if (read_from_2byte_register(HDC3022_ADDRESS, htons(HDC302x_Commands::MEASUREMENT_READOUT_AUTO_MODE), buffer, 6))
+  if (false == read_from_2byte_register(HDC3022_ADDRESS, htons(HDC302x_Commands::MEASUREMENT_READOUT_AUTO_MODE), buffer, 6))
   {
     printf("did not read data from HDC302x\n");
     return false;
