@@ -110,15 +110,15 @@ int main()
             int veml_state_ret = process_VEML7700(&light, &ms_return);
             if (veml_state_ret == 0) //done so we need to restart
             {
-                printf("VEML data, total time: %.2f, %u\n", light, ms_return);
+                //printf("VEML data, total time: %.2f, %u\n", light, ms_return);
                 assert(-1 == process_VEML7700(&light, &ms_return));
             }
             else if (veml_state_ret == -2) //error state
             {
-                printf("VEML error?\n");
+                printf("VEML error.\n");
             }
             // else veml_state==-1 and now veml_state==-1
-            printf("ms: %u\n", ms_return);
+            //printf("ms: %u\n", ms_return);
             timer_change_duration_core0(TIMER_FLAGS_CORE0::veml7700, ms_return);
         }
         /*if (flags & (uint32_t)TIMER_FLAGS_CORE0::bme688)

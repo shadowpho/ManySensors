@@ -13,8 +13,17 @@ enum VEML_REGISTERS
     VEML_ID = 0x7
 };
 
+uint8_t __buff_special[3]; 
 #define READ_VEML7700(register_address, recv_buff, num_of_bytes) assert(true == read_from_1byte_register(VEML7700_ADDRESS, register_address, (uint8_t *)recv_buff, num_of_bytes))
-#define WRITE_VEML7700(register_address, recv_buff, num_of_bytes) assert(true == write_to_register(VEML7700_ADDRESS, register_address, (uint8_t *)recv_buff, num_of_bytes))
+#define WRITE_VEML7700(register_address, send_buff, num_of_bytes)                                                 \
+    do                                                                                                            \
+    {                                                                                                             \
+        assert(num_of_bytes==2);  \
+        __buff_special[0]=register_address;\
+        __buff_special[1]=((uint8_t*)send_buff)[0]; \
+        __buff_special[2]=((uint8_t*)send_buff)[1];\
+        assert(true == write_to_device(VEML7700_ADDRESS,__buff_special,3));\
+    } while (0)
 
 /* From DS:
 ALS integration time setting IT:
@@ -45,45 +54,56 @@ const uint8_t ALS_INT_VALUE[6] = {0xC, 0x8, 0x0, 0x1, 0x2, 0x3};
 //                           GAIN - NA,1(1/8)2(1/4)3(x1)4(x2)
 const uint8_t ALS_GAIN_VALUE[5] = {0x0, 0x2, 0x3, 0x0, 0x1};
 
+const float OH_MULT = 1.3 * 1.2;
+                               //39          78           156            312        624          1286
+const float VEML_DELAY_TIME[] = {25*OH_MULT, 50*OH_MULT, 100*OH_MULT, 200*OH_MULT, 400*OH_MULT, 800*OH_MULT};
 
-const int OH_MULT = 1.3 * 1.2;
-const int VEML_DELAY_TIME[] = {25, 50, 100, 200, 400, 800};
-
+void veml7700_dump_registers()
+{
+    uint16_t buff;
+    for (int i = 0; i < 7; i++)
+    {
+        READ_VEML7700(i, &buff, 2);
+        printf("Reg#%i:%u\n", i, buff);
+    }
+}
 // Use 3,4,1,2 for gain, -2->3 for IT
 // Returns how long to sleep for
 uint32_t VEML_Start_Single_Measurment(int8_t gain, int8_t integration)
 {
-    uint16_t buff = 0x1;
+    static uint16_t CONF_REGISTER = 0x1;
     uint16_t als_count = 0;
     assert(gain > 0);
     assert(gain <= 4);
     assert(integration >= -2);
     assert(integration <= 3);
+    CONF_REGISTER |= 0x1;
+    WRITE_VEML7700(VEML_CONF_REGISTER, &CONF_REGISTER, 2);                                  // SHUT DOWN
+    CONF_REGISTER = ALS_INT_VALUE[integration + 2] << 6 | ALS_GAIN_VALUE[gain] << 11 | 0x1; // write new value with SD
 
-    WRITE_VEML7700(VEML_CONF_REGISTER, &buff, 2); // SHUT DOWN
-    buff = ALS_INT_VALUE[integration + 2] << 6 | ALS_GAIN_VALUE[gain] << 11 | 0x1;
-    WRITE_VEML7700(VEML_CONF_REGISTER, &buff, 2); // set gain/integration
-    buff &= ~1;
-    WRITE_VEML7700(VEML_CONF_REGISTER, &buff, 2); // GOGOGO
+    WRITE_VEML7700(VEML_CONF_REGISTER, &CONF_REGISTER, 2); // set gain/integration
+
+    CONF_REGISTER &= ~1;                                   // enable
+    WRITE_VEML7700(VEML_CONF_REGISTER, &CONF_REGISTER, 2); // GOGOGO
     int delay_time_veml = VEML_DELAY_TIME[integration + 2];
-    return (int)(0.5+(float)delay_time_veml * OH_MULT); // 30% buffer/tolerance
+    return (int)(3.5 +delay_time_veml); // 30% buffer/tolerance + 2.5ms + 0.5ms to round
 }
 
 uint32_t VEML_Read_Single_Measurment(float *lux, const int8_t gain, const int8_t integration)
 {
-    uint16_t buff = 0x1;
     uint16_t als_count = 0;
-    assert(lux!=NULL);
+    uint16_t CONF_REGISTER = ALS_INT_VALUE[integration + 2] << 6 | ALS_GAIN_VALUE[gain] << 11 | 0x1;
+    assert(lux != NULL);
     assert(gain > 0);
     assert(gain <= 4);
     assert(integration >= -2);
     assert(integration <= 3);
-
     READ_VEML7700(VEML_ALS_Data, &als_count, 2);
-    // printf("Lux!G:%i,I:%i,R:%i\n", gain, integration, als_count);
     *lux = (float)als_count;
-    buff = 0x1; // shutdown
-    WRITE_VEML7700(VEML_CONF_REGISTER, &buff, 2);
+    //WRITE_VEML7700(VEML_CONF_REGISTER, &CONF_REGISTER,2);//finish transaction and sleep
+    //int delay_time_veml = VEML_DELAY_TIME[integration + 2];
+    //sleep_ms((int)3.5 + delay_time_veml);    
+    // WRITE_VEML7700(VEML_CONF_REGISTER, &buff, 2);
     switch (gain)
     {
     case 1:
@@ -106,25 +126,25 @@ uint32_t VEML_Read_Single_Measurment(float *lux, const int8_t gain, const int8_t
     //(5-(integration+2))
     *lux *= 1 << (5 - (integration + 2));
     *lux *= 0.0042;
-    printf("raw Lux:%.0f,G:%i,I:%i,R:%u\n", *lux, gain, integration, als_count);
+    printf("L:%.0f,G:%i,I:%i,R:%i\n", *lux, gain, integration, als_count);
     return als_count;
 }
 
 bool init_VEML7700()
 {
-    uint8_t buff[2] = {0};
-    READ_VEML7700(VEML_REGISTERS::VEML_ID, buff, 2);
-    if(!((buff[0]==129)&&(buff[1]==196)))
+    uint16_t buff = 0;
+    READ_VEML7700(VEML_REGISTERS::VEML_ID, &buff, 2);
+    // on bus we have 0x81, 0xC4,  on this device they FLIP we get 0xC4, 0x81
+    if (buff != 0xC481)
     {
-        printf("did not detect VEML! %i,%i",buff[0],buff[1]);
+        printf("did not detect VEML! %i\n", buff);
         return false;
     }
-    buff[1] = 0;
-    buff[0] = 0x1; // ALS shut down
-    WRITE_VEML7700(VEML_REGISTERS::VEML_CONF_REGISTER, buff, 2);
-    buff[0] = 0x0; // Power Savings disabled
+    buff = 0x1; // ALS shut down
+    WRITE_VEML7700(VEML_REGISTERS::VEML_CONF_REGISTER, &buff, 2);
+    buff = 0x0; // Power Savings disabled
     sleep_ms(3);
-    WRITE_VEML7700(VEML_REGISTERS::VEML_PS, buff, 2);
+    WRITE_VEML7700(VEML_REGISTERS::VEML_PS, &buff, 2);
     return true;
 }
 
@@ -138,9 +158,9 @@ enum class VEML_STATE
     BRIGHT_LOOP_RESULTS
 };
 
-// 0 = success, read it out fully. call_in_ms = total time it took
-//-1 = call me again after call_in_ms
-//-2 = general failure?
+// 0 = success, data is ready. call_in_ms = total time it took to get data
+//-1 = call function again after call_in_ms
+//-2 = general failure
 
 int process_VEML7700(float *lux, uint32_t *call_in_ms)
 {
@@ -148,7 +168,7 @@ int process_VEML7700(float *lux, uint32_t *call_in_ms)
     assert(call_in_ms != NULL);
 
     static int gain = 1;
-    static int ALS_current_state = (int)VEML_STATE::INITIALIZE;
+    static enum VEML_STATE ALS_current_state = VEML_STATE::INITIALIZE;
     static int integration = 0;
     static absolute_time_t starting_measurment_time;
     static int ALS_ret_count = 0;
@@ -156,64 +176,64 @@ int process_VEML7700(float *lux, uint32_t *call_in_ms)
 change_state:
     switch (ALS_current_state)
     {
-    case (int)VEML_STATE::INITIALIZE:
+    case VEML_STATE::INITIALIZE:
         gain = 1;
         integration = 0;
         *call_in_ms = VEML_Start_Single_Measurment(gain, integration);
-        ALS_current_state = (int)VEML_STATE::GET_INIT_RESULTS;
+        ALS_current_state = VEML_STATE::GET_INIT_RESULTS;
         starting_measurment_time = get_absolute_time();
         return -1;
-    case (int)VEML_STATE::GET_INIT_RESULTS:
+    case VEML_STATE::GET_INIT_RESULTS:
         ALS_ret_count = VEML_Read_Single_Measurment(lux, gain, integration);
         if (ALS_ret_count <= 100)
         {
-            ALS_current_state = (int)VEML_STATE::DARK_LOOP;
+            ALS_current_state = VEML_STATE::DARK_LOOP;
             goto change_state;
         }
         else if (ALS_ret_count > 10000)
         {
-            ALS_current_state = (int)VEML_STATE::BRIGHT_LOOP;
+            ALS_current_state = VEML_STATE::BRIGHT_LOOP;
             goto change_state;
         }
         else
         {
             goto success;
         }
-    case (int)VEML_STATE::DARK_LOOP:
+    case VEML_STATE::DARK_LOOP:
         gain++;
-        if (gain >= 4) // maxed out gain
+        if (gain > 4) // maxed out gain
         {
             gain = 4;
             integration++;
             if (integration >= 4)
                 goto success; // MAXED OUT TIME AND GAIN
             *call_in_ms = VEML_Start_Single_Measurment(gain, integration);
-            ALS_current_state = (int)VEML_STATE::DARK_LOOP_RESULTS;
+            ALS_current_state = VEML_STATE::DARK_LOOP_RESULTS;
             return -1;
         }
         *call_in_ms = VEML_Start_Single_Measurment(gain, integration);
-        ALS_current_state = (int)VEML_STATE::DARK_LOOP_RESULTS;
+        ALS_current_state = VEML_STATE::DARK_LOOP_RESULTS;
         return -1;
-    case (int)VEML_STATE::DARK_LOOP_RESULTS:
+    case VEML_STATE::DARK_LOOP_RESULTS:
         ALS_ret_count = VEML_Read_Single_Measurment(lux, gain, integration);
         if (ALS_ret_count > 100)
             goto success;
-        ALS_current_state = (int)VEML_STATE::DARK_LOOP;
+        ALS_current_state = VEML_STATE::DARK_LOOP;
         goto change_state;
-    case (int)VEML_STATE::BRIGHT_LOOP:
+    case VEML_STATE::BRIGHT_LOOP:
         integration--;
         if (integration <= -3) // maxed out IT
-        {            
+        {
             goto success; // MAXED OUT TIME AND GAIN
         }
         *call_in_ms = VEML_Start_Single_Measurment(gain, integration);
-        ALS_current_state = (int)VEML_STATE::BRIGHT_LOOP_RESULTS;
+        ALS_current_state = VEML_STATE::BRIGHT_LOOP_RESULTS;
         return -1;
-    case (int)VEML_STATE::BRIGHT_LOOP_RESULTS:
+    case VEML_STATE::BRIGHT_LOOP_RESULTS:
         ALS_ret_count = VEML_Read_Single_Measurment(lux, gain, integration);
         if (ALS_ret_count <= 10000)
             goto success;
-        ALS_current_state = (int)VEML_STATE::BRIGHT_LOOP;
+        ALS_current_state = VEML_STATE::BRIGHT_LOOP;
         goto change_state;
     default:
         assert(false);
@@ -221,7 +241,7 @@ change_state:
 success:
     absolute_time_t final_measurment_time = get_absolute_time();
     *call_in_ms = absolute_time_diff_us(starting_measurment_time, final_measurment_time) / 1000;
-    ALS_current_state = (int)VEML_STATE::INITIALIZE;
+    ALS_current_state = VEML_STATE::INITIALIZE;
     float lux_calc = *lux;
     if (lux_calc > 1000)
         *lux = lux_calc * (1.0023 + lux_calc * (0.000081488 + lux_calc * (-9.3924e-9 + 6.0135e-13 * lux_calc)));

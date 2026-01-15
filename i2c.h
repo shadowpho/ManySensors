@@ -14,6 +14,6 @@
 void init_i2c();
 
 bool write_to_device(uint8_t dev_address, const uint8_t *src, uint8_t len);
-bool write_to_register(uint8_t dev_address,uint8_t dev_register, const uint8_t *src, uint8_t len);
+bool write_to_register(uint8_t dev_address,uint8_t dev_register, const uint8_t *src, uint8_t len); //THIS USES RESTART NOTE!!!!
 bool read_from_2byte_register(uint8_t dev_address, uint16_t dev_register,  uint8_t *dst, size_t len);
 bool read_from_1byte_register(uint8_t dev_address, uint8_t dev_register,  uint8_t *dst, size_t len);
