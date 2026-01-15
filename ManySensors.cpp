@@ -83,7 +83,7 @@ int main()
         {
             float temp, rh;
             if (true == get_data_hdc302x(&temp, &rh))
-                printf("HDC302x:%f, %f\n", temp, rh);
+                add_to_CMA(&sensor_CMA_data[(uint)SENSORS::hdc_302x],temp,rh,0,0);
             else
                 printf("HDC302x error\n");
         }
@@ -91,7 +91,7 @@ int main()
         {
             float temp3, rh2, co2;
             if (true == get_data_SCD30(&co2, &temp3, &rh2))
-                printf("SCD30:%f, %f, %f\n", co2, temp3, rh2);
+                add_to_CMA(&sensor_CMA_data[(uint)SENSORS::scd30],co2,temp3,rh2,0);
             else
                 printf("SCD30 error\n");
         }
@@ -99,7 +99,7 @@ int main()
         {
             float temp2, press;
             if (true == get_data_BMP280(&temp2, &press))
-                printf("BMP280:%f, %f\n", temp2, press);
+                add_to_CMA(&sensor_CMA_data[(uint)SENSORS::bmp280],temp2,press,0,0);
             else
                 printf("BMP280 error\n");
         }
@@ -108,16 +108,17 @@ int main()
             float light;
             uint32_t ms_return;
             int veml_state_ret = process_VEML7700(&light, &ms_return);
-            if (veml_state_ret == 0)
+            if (veml_state_ret == 0) //done so we need to restart
             {
-                printf("VEML data: %f,%i\n", light, ms_return);
+                printf("VEML data, total time: %.2f, %u\n", light, ms_return);
                 assert(-1 == process_VEML7700(&light, &ms_return));
             }
-            else if (veml_state_ret == -2)
+            else if (veml_state_ret == -2) //error state
             {
                 printf("VEML error?\n");
             }
             // else veml_state==-1 and now veml_state==-1
+            printf("ms: %u\n", ms_return);
             timer_change_duration_core0(TIMER_FLAGS_CORE0::veml7700, ms_return);
         }
         /*if (flags & (uint32_t)TIMER_FLAGS_CORE0::bme688)

@@ -45,9 +45,9 @@ const uint8_t ALS_INT_VALUE[6] = {0xC, 0x8, 0x0, 0x1, 0x2, 0x3};
 //                           GAIN - NA,1(1/8)2(1/4)3(x1)4(x2)
 const uint8_t ALS_GAIN_VALUE[5] = {0x0, 0x2, 0x3, 0x0, 0x1};
 
-#define OH_time 60
-#define OH_MULT 1.2
-const int VEML_DELAY_TIME[] = {60, 110, 200, 350, 700, 1200};
+
+const int OH_MULT = 1.3 * 1.2;
+const int VEML_DELAY_TIME[] = {25, 50, 100, 200, 400, 800};
 
 // Use 3,4,1,2 for gain, -2->3 for IT
 // Returns how long to sleep for
@@ -66,13 +66,14 @@ uint32_t VEML_Start_Single_Measurment(int8_t gain, int8_t integration)
     buff &= ~1;
     WRITE_VEML7700(VEML_CONF_REGISTER, &buff, 2); // GOGOGO
     int delay_time_veml = VEML_DELAY_TIME[integration + 2];
-    return (int)((float)delay_time_veml * 1.2); // 20% buffer/tolerance
+    return (int)(0.5+(float)delay_time_veml * OH_MULT); // 30% buffer/tolerance
 }
 
-uint32_t VEML_Read_Single_Measurment(float *lux, int8_t gain, int8_t integration)
+uint32_t VEML_Read_Single_Measurment(float *lux, const int8_t gain, const int8_t integration)
 {
     uint16_t buff = 0x1;
     uint16_t als_count = 0;
+    assert(lux!=NULL);
     assert(gain > 0);
     assert(gain <= 4);
     assert(integration >= -2);
@@ -104,7 +105,8 @@ uint32_t VEML_Read_Single_Measurment(float *lux, int8_t gain, int8_t integration
     // 0= *32, 1 = *16... 5=*1
     //(5-(integration+2))
     *lux *= 1 << (5 - (integration + 2));
-    *lux *= 0.0036;
+    *lux *= 0.0042;
+    printf("raw Lux:%.0f,G:%i,I:%i,R:%u\n", *lux, gain, integration, als_count);
     return als_count;
 }
 
@@ -146,7 +148,7 @@ int process_VEML7700(float *lux, uint32_t *call_in_ms)
     assert(call_in_ms != NULL);
 
     static int gain = 1;
-    static int ALS_current_state = 0;
+    static int ALS_current_state = (int)VEML_STATE::INITIALIZE;
     static int integration = 0;
     static absolute_time_t starting_measurment_time;
     static int ALS_ret_count = 0;
@@ -218,8 +220,8 @@ change_state:
     }
 success:
     absolute_time_t final_measurment_time = get_absolute_time();
-    *call_in_ms = absolute_time_diff_us(final_measurment_time, starting_measurment_time) / 1000;
-    ALS_current_state = 0;
+    *call_in_ms = absolute_time_diff_us(starting_measurment_time, final_measurment_time) / 1000;
+    ALS_current_state = (int)VEML_STATE::INITIALIZE;
     float lux_calc = *lux;
     if (lux_calc > 1000)
         *lux = lux_calc * (1.0023 + lux_calc * (0.000081488 + lux_calc * (-9.3924e-9 + 6.0135e-13 * lux_calc)));
